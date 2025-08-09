@@ -1,8 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
+const cors = require('cors');
 
 const app = express();
+app.use(cors({
+    origin: 'https://boardstatuschallenge.netlify.app/',
+}));
 app.use(express.json());
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
