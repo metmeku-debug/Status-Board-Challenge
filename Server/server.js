@@ -4,10 +4,15 @@ const admin = require('firebase-admin');
 const cors = require('cors');
 
 const app = express();
-app.use(cors({
-    origin: 'https://boardstatuschallenge.netlify.app/',
-}));
-app.use(express.json());
+
+const corsOptions = {
+    origin: 'https://boardstatuschallenge.netlify.app',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+};
+
+app.use(cors(corsOptions));
+app.use(express.json())
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
     throw new Error('Missing FIREBASE_SERVICE_ACCOUNT env variable');
