@@ -7,8 +7,15 @@ export default function MiniApp() {
   const [userName, setUserName] = useState('User');
   const [statusText, setStatusText] = useState('');
   const [latestStatuses, setLatestStatuses] = useState([]);
-  const [message, setMessage] = useState(null);
+  const [message, setMess] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  function setMessage(message) {
+    setMess(message);
+    setTimeout(() => {
+      setMess(null);
+    }, 3000);
+  }
 
   useEffect(() => {
     try {
@@ -34,7 +41,7 @@ export default function MiniApp() {
   }, []);
 
   const handlePostStatus = async () => {
-    if (!statusText.trim()) {
+    if (!statusText) {
       setMessage({ type: 'error', text: 'Status cannot be empty!' });
       return;
     }
@@ -66,38 +73,41 @@ export default function MiniApp() {
     }
   };
 
-
-
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md font-sans">
-      <h2 className="text-2xl font-semibold mb-6">Hello, {userName}! 👋</h2>
+    <div className="max-w-md mx-auto p-6 bg-gray-50 rounded-lg shadow-md font-sans min-h-[50vh] flex flex-col">
+      <header className="mb-6 text-center">
+        <h2 className="text-3xl font-semibold text-blue-700">Hello, {userName}! 👋</h2>
+      </header>
 
-      <textarea
-        rows={3}
-        placeholder="What's on your mind today?"
-        value={statusText}
-        onChange={(e) => setStatusText(e.target.value)}
-        className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        disabled={loading}
-      />
+      <form className="flex flex-col items-center justify-around flex-grow w-full">
+        <textarea
+          rows={6}
+          placeholder="What's on your mind today?"
+          value={statusText}
+          onChange={(e) => setStatusText(e.target.value)}
+          className="mb-6 w-full max-w-[80vw] p-4 border border-blue-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-400 bg-white text-blue-900 placeholder-blue-400 resize-none"
+          disabled={loading}
+        />
 
-      <button
-        onClick={handlePostStatus}
-        disabled={loading}
-        className={`w-full py-3 mb-4 text-white rounded-md transition-colors ${loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-      >
-        {loading ? 'Posting...' : 'Post Status'}
-      </button>
+        <button
+          onClick={handlePostStatus}
+          disabled={loading || !statusText}
+          className={`postButton ${loading || !statusText && 'loadingButton'}`}
+        >
+          {loading ? 'Posting...' : 'Post Status'}
+        </button>
+      </form>
 
       {message && (
-        <p
-          className={`mb-4 font-semibold ${message.type === 'error' ? 'text-red-600' : 'text-green-600'
-            }`}
-        >
-          {message.text}
-        </p>
+        <div className={message.type === "error" ? 'error' : 'success'}>
+          <p
+            className={`text-center font-semibold`}
+          >
+            {message.text}
+          </p>
+        </div>
       )}
     </div>
   );
+
 }

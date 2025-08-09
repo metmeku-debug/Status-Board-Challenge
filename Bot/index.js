@@ -9,7 +9,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const API_BASE = 'https://status-board-challenge.onrender.com';
+const API_BASE = 'https://arrogant-chloe-metmeku-dab124e3.koyeb.app';
 
 bot.start((ctx) => {
     const firstName = ctx.from.first_name || 'there';
@@ -29,12 +29,11 @@ bot.command('latest', async (ctx) => {
 
         const messages = [];
         console.log('data is', data);
-        data.forEach((doc) => {
-            const data = doc.data();
-            messages.push(`${data.name}: ${data.status}`);
+        data.forEach((post) => {
+            messages.push(`${post.name || 'anonymous'}: ${post.status}`);
         });
 
-        ctx.reply(`Latest statuses:\n\n${messages.join('\n\n')}`);
+        ctx.reply(`📢 Latest statuses:\n\n${messages.join('\n\n')}`);
     } catch (error) {
         console.error('Error fetching latest statuses:', error);
         ctx.reply('Sorry, something went wrong fetching the latest statuses.');
@@ -44,29 +43,37 @@ bot.command('latest', async (ctx) => {
 bot.command('mystatus', async (ctx) => {
     try {
         const userId = ctx.from.id;
-        const snapshot = await db
-            .collection('statuses')
-            .where('userId', '==', userId)
-            .orderBy('timestamp', 'desc')
-            .limit(3)
-            .get();
+        if (!userId) return ctx.reply('User ID not found.');
 
-        if (snapshot.empty) {
-            return ctx.reply('You have not posted any statuses yet.');
-        }
-
-        const messages = [];
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            messages.push(data.status);
+        const res = await fetch(`${API_BASE}/mystatus`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
         });
 
-        ctx.reply(`Your last statuses:\n\n${messages.join('\n\n')}`);
+        if (!res.ok) throw new Error('Failed to fetch your statuses.');
+
+        const data = await res.json();
+
+        const button = [Markup.button.url("What's on your mind today ?", 'https://t.me/status_boardbot/challenge')];
+
+        if (!data.length) return ctx.reply('You have not posted any statuses yet.', Markup.inlineKeyboard(button));
+
+        const messages = data.map(post => post.status);
+
+        ctx.reply(`📢 Your last statuses:\n\n${messages.join('\n\n')}`);
     } catch (error) {
         console.error('Error fetching user statuses:', error);
         ctx.reply('Sorry, something went wrong fetching your statuses.');
     }
 });
+
+bot.telegram.setMyCommands([
+    { command: 'start', description: 'Start the bot and see welcome message' },
+    { command: 'latest', description: 'View the 3 most recent statuses' },
+    { command: 'mystatus', description: 'View your last 3 statuses' },
+]);
+
 
 bot.launch();
 console.log('Bot started with Firebase integration');

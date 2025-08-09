@@ -36,14 +36,16 @@ app.post('/status', async (req, res) => {
             return res.status(400).json({ error: 'id, name and role are required' });
         }
 
-        const docRef = db.collection('statuses').doc(id);
-        await docRef.set({
+        console.log('id, name, status', id, name, status);
+
+        const docRef = await db.collection('statuses').add({
+            userId: id,
             name,
             status,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        res.json({ message: 'User added successfully', id });
+        res.json({ message: 'User added successfully', id: docRef.id });
     } catch (error) {
         console.error('Error adding user:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -74,18 +76,30 @@ app.get('/latest', async (req, res) => {
 });
 
 // GET /users/:id - fetch user document, this is the bonus that will return the 3 by the user himself.
-app.get('/users/:id', async (req, res) => {
-    try {
-        const docRef = db.collection('users').doc(req.params.id);
-        const doc = await docRef.get();
+app.post('/mystatus', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
 
-        if (!doc.exists) {
-            return res.status(404).json({ error: 'User not found' });
+    try {
+        const snapshot = await db
+            .collection('statuses')
+            .where('userId', '==', userId)
+            .orderBy('createdAt', 'desc')
+            .limit(3)
+            .get();
+
+        if (snapshot.empty) {
+            return res.json([]);
         }
 
-        res.json({ id: doc.id, ...doc.data() });
+        const posts = [];
+        snapshot.forEach(doc => {
+            posts.push(doc.data());
+        });
+
+        res.json(posts);
     } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('Error fetching user statuses:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
