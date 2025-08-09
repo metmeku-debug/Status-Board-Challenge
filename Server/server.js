@@ -28,18 +28,18 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-
-app.post('/users', async (req, res) => {
+//This is an endpoint that will accept the post form the front-end.
+app.post('/status', async (req, res) => {
     try {
-        const { id, name, role } = req.body;
-        if (!id || !name || !role) {
+        const { id, name, status } = req.body;
+        if (!id || !name || !status) {
             return res.status(400).json({ error: 'id, name and role are required' });
         }
 
-        const docRef = db.collection('users').doc(id);
+        const docRef = db.collection('statuses').doc(id);
         await docRef.set({
             name,
-            role,
+            status,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
@@ -50,7 +50,29 @@ app.post('/users', async (req, res) => {
     }
 });
 
-// GET /users/:id - fetch user document
+//this is and end point that will return the lates 3 to the bot.
+app.get('/latest', async (req, res) => {
+    try {
+        const statusesRef = db.collection('statuses');
+        const snapshot = await statusesRef
+            .orderBy('createdAt', 'desc')  // order by timestamp descending
+            .limit(3)                     // get only latest 3
+            .get();
+
+        const latestStatuses = [];
+        snapshot.forEach(doc => {
+            latestStatuses.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('latestStatuses', latestStatuses);
+
+        res.json(latestStatuses);
+    } catch (error) {
+        console.error('Error fetching latest statuses:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /users/:id - fetch user document, this is the bonus that will return the 3 by the user himself.
 app.get('/users/:id', async (req, res) => {
     try {
         const docRef = db.collection('users').doc(req.params.id);
@@ -66,6 +88,7 @@ app.get('/users/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 const PORT = process.env.PORT || 3000;
 

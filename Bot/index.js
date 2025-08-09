@@ -12,24 +12,21 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx) => {
     const firstName = ctx.from.first_name || 'there';
-    const button = [Markup.button.url('Open the MIni app', 'https://t.me/status_boardbot/challenge')];
+    const button = [Markup.button.url("What's on your mind today ?", 'https://t.me/status_boardbot/challenge')];
     ctx.reply(`Hello ${firstName}! Welcome to Status Board, Use /latest to see recent statuses.`, Markup.inlineKeyboard(button));
 });
 
 bot.command('latest', async (ctx) => {
     try {
-        const snapshot = await db
-            .collection('statuses')
-            .orderBy('timestamp', 'desc')
-            .limit(3)
-            .get();
+        const res = await fetch(`${API_BASE}/latest`);
 
-        if (snapshot.empty) {
-            return ctx.reply('No statuses posted yet.');
-        }
+        if (!res.ok) throw new Error('Failed to fetch latest statuses');
+
+        const data = await res.json();
 
         const messages = [];
-        snapshot.forEach((doc) => {
+        console.log('data is', data);
+        data.forEach((doc) => {
             const data = doc.data();
             messages.push(`${data.name}: ${data.status}`);
         });

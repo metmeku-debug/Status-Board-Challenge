@@ -9,28 +9,19 @@ export default function MiniApp() {
   const [latestStatuses, setLatestStatuses] = useState([]);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Initialize Telegram Web App SDK
-  function errorViewManager(err) {
-    setError(err);
-    setTimeout(() => {
-      setError(null);
-    }, 2000);
-  }
 
   useEffect(() => {
     try {
       // Make sure Telegram WebApp is available
-      if (typeof WebApp === "undefined") {
-        errorViewManager("This site only works as a Telegram WebApp.");
+      if (!WebApp) {
+        setMessage({ type: 'error', text: 'This is a web app for a telegram bot, please try again from out bot, @status_boardbot' });
         return;
       }
 
       const user = WebApp.initDataUnsafe?.user;
 
       if (!user) {
-        errorViewManager("No user info provided by Telegram.");
+        setMessage({ type: 'error', text: "No user info provided by Telegram." });
         return;
       }
 
@@ -38,24 +29,8 @@ export default function MiniApp() {
       WebApp.ready();
     } catch (err) {
       console.error("Telegram init error:", err);
-      errorViewManager("Failed to initialize Telegram WebApp.");
+      setMessage({ type: 'error', text: "Failed to initialize Telegram WebApp." });
     }
-  }, []);
-
-  // Fetch latest statuses
-  const fetchLatest = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/latest`);
-      if (!res.ok) throw new Error('Failed to fetch latest statuses');
-      const data = await res.json();
-      setLatestStatuses(data);
-    } catch {
-      setLatestStatuses([]);
-    }
-  };
-
-  useEffect(() => {
-    fetchLatest();
   }, []);
 
   const handlePostStatus = async () => {
@@ -67,14 +42,15 @@ export default function MiniApp() {
     setMessage(null);
 
     try {
-      const userId = webApp.initDataUnsafe.user?.id || 0;
+      const userId = WebApp.initDataUnsafe.user?.id;  // matches 'id' in backend
+      if (!userId) throw new Error('your userId can not be found, please try again from the telegram bot.');
       const res = await fetch(`${API_BASE}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
-          name: userName,
-          status: statusText.trim(),
+          id: userId,         // changed from userId to id
+          name: userName,     // keep as is
+          status: statusText.trim(),  // keep as is
         }),
       });
 
@@ -83,13 +59,14 @@ export default function MiniApp() {
 
       setMessage({ type: 'success', text: 'Status posted successfully! 🎉' });
       setStatusText('');
-      fetchLatest(); // Refresh statuses
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
     } finally {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md font-sans">
@@ -121,23 +98,6 @@ export default function MiniApp() {
           {message.text}
         </p>
       )}
-
-      <section>
-        <h3 className="text-xl font-semibold mb-3">📰 Latest statuses</h3>
-        {latestStatuses.length === 0 ? (
-          <p className="text-gray-600">No statuses yet. Be the first! 🚀</p>
-        ) : (
-          latestStatuses.map((status, idx) => (
-            <div
-              key={idx}
-              className="mb-3 p-4 bg-gray-100 rounded-md shadow-sm"
-            >
-              <strong className="block text-gray-800">{status.name}</strong>
-              <p className="text-gray-700">{status.status}</p>
-            </div>
-          ))
-        )}
-      </section>
     </div>
   );
 }
