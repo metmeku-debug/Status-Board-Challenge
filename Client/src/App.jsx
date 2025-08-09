@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import WebApp from '@twa-dev/sdk';
 
-const API_BASE = 'https://status-board-challenge.onrender.com';
+const API_BASE = 'https://arrogant-chloe-metmeku-dab124e3.koyeb.app';
 
 export default function MiniApp() {
   const [userName, setUserName] = useState('User');
