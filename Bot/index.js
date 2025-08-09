@@ -12,18 +12,8 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx) => {
     const firstName = ctx.from.first_name || 'there';
-    ctx.reply(`Welcome, ${firstName}! Use /latest to see recent statuses.`, {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    {
-                        text: 'Open Mini App',
-                        web_app: { url: 'https://localhost:5173' },
-                    },
-                ],
-            ],
-        },
-    });
+    const button = [Markup.button.url('Open the MIni app', 'https://t.me/status_boardbot/challenge')];
+    ctx.reply(`Hello ${firstName}! Welcome to Status Board, Use /latest to see recent statuses.`, Markup.inlineKeyboard(button));
 });
 
 bot.command('latest', async (ctx) => {
