@@ -52,6 +52,7 @@ app.post('/status', async (req, res) => {
 
 //this is and end point that will return the lates 3 to the bot.
 app.get('/latest', async (req, res) => {
+    console.log('latest firing.');
     try {
         const statusesRef = db.collection('statuses');
         const snapshot = await statusesRef

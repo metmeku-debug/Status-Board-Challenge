@@ -9,6 +9,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const API_BASE = 'https://status-board-challenge.onrender.com';
 
 bot.start((ctx) => {
     const firstName = ctx.from.first_name || 'there';
@@ -17,7 +18,9 @@ bot.start((ctx) => {
 });
 
 bot.command('latest', async (ctx) => {
+    console.log('latest command fire.')
     try {
+        console.log('about to send fetch');
         const res = await fetch(`${API_BASE}/latest`);
 
         if (!res.ok) throw new Error('Failed to fetch latest statuses');
