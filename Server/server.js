@@ -28,6 +28,34 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+const fetch = require('node-fetch'); // if not already installed, install with npm i node-fetch@2
+
+async function letTheBotKnow(userId, status) {
+    const botToken = process.env.BOT_TOKEN;
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    const message = `✅ Your status was posted successfully:\n\n"${status}"`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: userId,
+                text: message,
+            }),
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Telegram API error:', errorText);
+        }
+    } catch (error) {
+        console.error('Error sending Telegram confirmation:', error);
+    }
+}
+
+
 //This is an endpoint that will accept the post form the front-end.
 app.post('/status', async (req, res) => {
     try {
@@ -46,6 +74,7 @@ app.post('/status', async (req, res) => {
         });
 
         res.json({ message: 'User added successfully', id: docRef.id });
+        letTheBotKnow(id, status);
     } catch (error) {
         console.error('Error adding user:', error);
         res.status(500).json({ error: 'Internal server error' });

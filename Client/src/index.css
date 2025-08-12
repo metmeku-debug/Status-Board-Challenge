@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  background-color: white;
+}
+
 .error {
   width: fit-content;
   height: fit-content;
